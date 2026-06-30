@@ -16,7 +16,14 @@
 
 OBJCOPYFLAGS_Image :=-O binary -R .note -R .note.gnu.build-id -R .comment -S
 
-targets := Image Image.bz2 Image.gz Image.lz4 Image.lzma Image.lzo
+targets := Image Image.bz2 Image.gz Image.lz4 Image.lzma Image.lzo dtbo.img
+
+DTBO_OBJS := \
+$(obj)/dts/mediatek/mt6879-manaus-docomo-evt1-overlay.dtbo \
+$(obj)/dts/mediatek/mt6879-manaus-evb-overlay.dtbo \
+$(obj)/dts/mediatek/mt6879-manaus-dvt1-overlay.dtbo \
+$(obj)/dts/mediatek/mt6879-manaus-dvt1a-overlay.dtbo \
+$(obj)/dts/mediatek/mt6879-manaus-dvt2-overlay.dtbo
 
 $(obj)/Image: vmlinux FORCE
 	$(call if_changed,objcopy)
@@ -35,6 +42,9 @@ $(obj)/Image.lzma: $(obj)/Image FORCE
 
 $(obj)/Image.lzo: $(obj)/Image FORCE
 	$(call if_changed,lzo)
+
+$(obj)/dtbo.img: $(DTBO_OBJS) FORCE
+	$(call if_changed,mkdtboimg)
 
 install:
 	$(CONFIG_SHELL) $(srctree)/$(src)/install.sh $(KERNELRELEASE) \
