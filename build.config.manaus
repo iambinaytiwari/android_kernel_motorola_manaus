@@ -12,6 +12,7 @@ KERNEL_DIR=kernel-5.10
 FILES="
 arch/arm64/boot/Image.gz
 arch/arm64/boot/dts/mediatek/mt6879.dtb
+arch/arm64/boot/dtbo.img
 vmlinux
 System.map
 vmlinux.symvers
@@ -19,7 +20,7 @@ modules.builtin
 modules.builtin.modinfo
 "
 
-MAKE_GOALS="${MAKE_GOALS} Image.gz modules mediatek/mt6879.dtb"
+MAKE_GOALS="${MAKE_GOALS} Image.gz modules mediatek/mt6879.dtb dtbo.img"
 
 ABI_OUT_TAG="mtk"
 KMI_SYMBOL_LIST=android/abi_gki_aarch64_mtk
