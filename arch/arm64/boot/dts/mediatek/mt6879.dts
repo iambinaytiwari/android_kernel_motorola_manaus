@@ -338,7 +338,7 @@
 			swiotlb=noforce allow_file_spec_access\
 			8250.nr_uarts=4 \
 			transparent_hugepage=never \
-			firmware_class.path=/vendor/firmware pelt=8 ";
+			firmware_class.path=/vendor/firmware pelt=8 fenrir=true";
 		kaslr-seed = <0 0>;
 		atag,videolfb-fb_base_l = <0x7e605000>;
 		atag,videolfb-fb_base_h = <0x0>;
