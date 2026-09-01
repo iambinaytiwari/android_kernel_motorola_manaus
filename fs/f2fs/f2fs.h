@@ -620,7 +620,11 @@ struct extent_info {
 #ifdef CONFIG_F2FS_FS_COMPRESSION
 	unsigned int c_len;		/* physical extent length of compressed blocks */
 #endif
+#if IS_ENABLED(CONFIG_ARM)
+} __packed;
+#else
 };
+#endif
 
 struct extent_node {
 	struct rb_node rb_node;		/* rb node located in rb-tree */
