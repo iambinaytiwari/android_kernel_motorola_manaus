@@ -1,6 +1,14 @@
 # SPDX-License-Identifier: GPL-2.0-only
 menu "Android"
 
+config ANDROID
+	bool "Android Drivers"
+	default y
+	help
+	  Enable support for various drivers needed on the Android platform
+
+if ANDROID
+
 config ANDROID_BINDER_IPC
 	bool "Android Binder IPC Driver"
 	depends on MMU
@@ -48,6 +56,7 @@ config ANDROID_BINDER_IPC_SELFTEST
 config ANDROID_VENDOR_HOOKS
 	bool "Android Vendor Hooks"
 	depends on TRACEPOINTS
+	default y
 	help
 	  Enable vendor hooks in Android Common Kernel
 
@@ -62,6 +71,14 @@ config ANDROID_KABI_RESERVE
 	help
 	  Android KABI Reserve
 
-source "drivers/android/binder_latency_tracer/Kconfig"
+config BINDER_TRANSACTION_LATENCY_TRACKING
+	tristate "Android Binder transaction tracking"
+	help
+	  Used for track abnormal binder transaction which is over threshold,
+	  when the transaction is done or be free, this transaction would be
+	  checked whether it executed overtime.
+	  If yes, printing out the detailed info.
+
+endif # if ANDROID
 
 endmenu

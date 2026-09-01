@@ -161,9 +161,33 @@ DECLARE_RESTRICTED_HOOK(android_rvh_schedule,
 	TP_PROTO(struct task_struct *prev, struct task_struct *next, struct rq *rq),
 	TP_ARGS(prev, next, rq), 1);
 
+DECLARE_RESTRICTED_HOOK(android_rvh_sched_cpu_starting,
+	TP_PROTO(int cpu),
+	TP_ARGS(cpu), 1);
+
+DECLARE_RESTRICTED_HOOK(android_rvh_sched_cpu_dying,
+	TP_PROTO(int cpu),
+	TP_ARGS(cpu), 1);
+
+DECLARE_RESTRICTED_HOOK(android_rvh_account_irq,
+	TP_PROTO(struct task_struct *curr, int cpu, s64 delta),
+	TP_ARGS(curr, cpu, delta), 1);
+
+DECLARE_RESTRICTED_HOOK(android_rvh_place_entity,
+	TP_PROTO(struct cfs_rq *cfs_rq, struct sched_entity *se, int initial, u64 vruntime),
+	TP_ARGS(cfs_rq, se, initial, vruntime), 1);
+
 DECLARE_RESTRICTED_HOOK(android_rvh_build_perf_domains,
 	TP_PROTO(bool *eas_check),
 	TP_ARGS(eas_check), 1);
+
+DECLARE_RESTRICTED_HOOK(android_rvh_update_cpu_capacity,
+	TP_PROTO(int cpu, unsigned long *capacity),
+	TP_ARGS(cpu, capacity), 1);
+
+DECLARE_RESTRICTED_HOOK(android_rvh_tick_entry,
+	TP_PROTO(struct rq *rq),
+	TP_ARGS(rq), 1);
 
 DECLARE_RESTRICTED_HOOK(android_rvh_update_misfit_status,
 	TP_PROTO(struct task_struct *p, struct rq *rq, bool *need_update),
