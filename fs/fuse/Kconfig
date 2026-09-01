@@ -6,17 +6,20 @@ config FUSE_FS
 	  With FUSE it is possible to implement a fully functional filesystem
 	  in a userspace program.
 
-	  There's also a companion library: libfuse2.  This library is available
-	  from the FUSE homepage:
-	  <https://github.com/libfuse/>
-	  although chances are your distribution already has that library
-	  installed if you've installed the "fuse" package itself.
+	  There's also a companion library: libfuse.  This library is
+	  available from the FUSE homepage:
+	  <https://github.com/libfuse/libfuse>
+	  although it may also be available from your distributor.
 
-	  See <file:Documentation/filesystems/fuse.rst> for more information.
-	  See <file:Documentation/Changes> for needed library/utility version.
+	  You also need userspace tools to use FUSE.  Library and tools
+	  can be downloaded from the homepage.
 
 	  If you want to develop a userspace FS, or if you want to use
-	  a filesystem based on FUSE, answer Y or M.
+	  a network filesystem based on FUSE (CABSFUSE, EncFS, SSHFS, etc.)
+	  then say Y or M.  To compile the FUSE core as a module, choose M.
+	  The module will be called fuse.
+
+	  If unsure, say N.
 
 config CUSE
 	tristate "Character device in Userspace support"
@@ -25,30 +28,28 @@ config CUSE
 	  This FUSE extension allows character devices to be
 	  implemented in userspace.
 
-	  If you want to develop or use a userspace character device
-	  based on CUSE, answer Y or M.
+	  If unsure, say N.
 
-config VIRTIO_FS
-	tristate "Virtio Filesystem"
+config FUSE_VIRTIO
+	bool "Virtio Filesystem"
 	depends on FUSE_FS
 	select VIRTIO
 	help
-	  The Virtio Filesystem allows guests to mount file systems from the
-	  host.
+	  The Virtio Filesystem allows guests to mount a file system
+	  exported from the host.
 
-	  If you want to share files between guests or with the host, answer Y
-	  or M.
+	  If you want to share files between guests and the host, then
+	  say Y or M. To compile this driver as a module, choose M. The
+	  module will be called virtiofs.
+
+	  If unsure, say N.
 
 config FUSE_DAX
-	bool "Virtio Filesystem Direct Host Memory Access support"
-	default y
-	select INTERVAL_TREE
-	depends on VIRTIO_FS
+	bool "Virtio Filesystem DAX support"
+	depends on FUSE_VIRTIO
 	depends on FS_DAX
-	depends on DAX_DRIVER
 	help
-	  This allows bypassing guest page cache and allows mapping host page
-	  cache directly in guest address space.
+	  Allow DAX support on Virtio Filesystem.
 
 	  If you want to allow mounting a Virtio Filesystem with the "dax"
 	  option, answer Y.
@@ -60,3 +61,9 @@ config FUSE_BPF
 	help
 	  Extends FUSE by adding BPF to prefilter calls and potentially pass to a
 	  backing file system
+
+config MTK_FUSE_PASSTHROUGH_MTIME_UPDATE
+	bool "update file time in passthrough path"
+	help
+	  This is a temporary config used for mtk userdebug and eng load to fix
+	  the file time issue when passthrough is used.

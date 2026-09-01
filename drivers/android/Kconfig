@@ -1,36 +1,29 @@
-# SPDX-License-Identifier: GPL-2.0
+# SPDX-License-Identifier: GPL-2.0-only
 menu "Android"
-
-config ANDROID
-	bool "Android Drivers"
-	help
-	  Enable support for various drivers needed on the Android platform
-
-if ANDROID
 
 config ANDROID_BINDER_IPC
 	bool "Android Binder IPC Driver"
 	depends on MMU
-	default n
+	default y
 	help
-	  Binder is used in Android for both communication between processes,
-	  and remote method invocation.
+	  Binder is an IPC mechanism which supports features such as
+	  reference counting of shared objects, synchronous IPC calls
+	  over shared memory, a simple shared-memory-based protocol,
+	  and a process-refcounted means of exporting operations to
+	  other processes.
 
-	  This means one Android process can call a method/routine in another
-	  Android process, using Binder to identify, invoke and pass arguments
-	  between said processes.
+	  If unsure, say Y.
 
 config ANDROID_BINDERFS
 	bool "Android Binderfs filesystem"
 	depends on ANDROID_BINDER_IPC
-	default n
+	default y
 	help
-	  Binderfs is a pseudo-filesystem for the Android Binder IPC driver
-	  which can be mounted per-ipc namespace allowing to run multiple
-	  instances of Android.
-	  Each binderfs mount initially only contains a binder-control device.
-	  It can be used to dynamically allocate new binder IPC devices via
-	  ioctls.
+	  Binderfs is a pseudo-filesystem for the Android binder IPC driver
+	  which can be mounted per-ipc namespace, allowing to use binder
+	  in containers.
+
+	  If unsure, say Y.
 
 config ANDROID_BINDER_DEVICES
 	string "Android Binder devices"
@@ -41,39 +34,34 @@ config ANDROID_BINDER_DEVICES
 
 	  The binder.devices parameter is a comma-separated list of strings
 	  that specifies the names of the binder device nodes that will be
-	  created. Each binder device has its own context manager, and is
-	  therefore logically separated from the other devices.
+	  created. Each name will correspond to a unique /dev/binder<name>
+	  device node.
 
 config ANDROID_BINDER_IPC_SELFTEST
 	bool "Android Binder IPC Driver Selftest"
 	depends on ANDROID_BINDER_IPC
 	help
-	  This feature allows binder selftest to run.
-
-	  Binder selftest checks the allocation and free of binder buffers
-	  exhaustively with combinations of various buffer sizes and
-	  alignments.
-
-config ANDROID_DEBUG_SYMBOLS
-	bool "Android Debug Symbols"
-	help
-	  Enables export of debug symbols that are useful for offline debugging
-	  of a kernel. These symbols would be used in vendor modules to find
-	  addresses of the core kernel symbols for vendor extensions.
-
-	  This driver is statically compiled into kernel and maintains all the
-	  required symbol addresses for vendor modules and provides necessary
-	  interface vendor modules.
+	  This feature allows binder to start a self test in order to check
+	  whether a 32-bit userspace application can communicate with a 64-bit
+	  kernel. If unsure, say N.
 
 config ANDROID_VENDOR_HOOKS
 	bool "Android Vendor Hooks"
 	depends on TRACEPOINTS
 	help
-	  Enable vendor hooks implemented as tracepoints
+	  Enable vendor hooks in Android Common Kernel
 
-	  Allow vendor modules to attach to tracepoint "hooks" defined via
-	  DECLARE_HOOK or DECLARE_RESTRICTED_HOOK.
+config ANDROID_DEBUG_SYMBOLS
+	bool "Android Debug Symbols"
+	help
+	  Enable debug symbols in Android Common Kernel
 
-endif # if ANDROID
+config ANDROID_KABI_RESERVE
+	bool "Android KABI Reserve"
+	default y
+	help
+	  Android KABI Reserve
+
+source "drivers/android/binder_latency_tracer/Kconfig"
 
 endmenu

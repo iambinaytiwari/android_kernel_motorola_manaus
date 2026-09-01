@@ -462,10 +462,19 @@ int blk_queue_enter(struct request_queue *q, blk_mq_req_flags_t flags)
 		 */
 		smp_rmb();
 
+#if IS_ENABLED(CONFIG_MTK_BLOCK_IO_PM_DEBUG)
+		trace_blk_queue_enter_sleep(q);
+#endif
+
 		wait_event(q->mq_freeze_wq,
 			   (!q->mq_freeze_depth &&
 			    blk_pm_resume_queue(pm, q)) ||
 			   blk_queue_dying(q));
+
+#if IS_ENABLED(CONFIG_MTK_BLOCK_IO_PM_DEBUG)
+		trace_blk_queue_enter_wakeup(q);
+#endif
+
 		if (blk_queue_dying(q))
 			return -ENODEV;
 	}
