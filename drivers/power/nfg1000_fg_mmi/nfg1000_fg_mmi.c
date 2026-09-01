@@ -852,54 +852,41 @@ static int nfg1000_ota_program_step1_EnterBootLoad(struct mmi_fg_chip *di)
 	//reset nfg1000
 	mmi_info("reset nfg1000");
 	ret = fg_write_block(di, di->regs[BQ_FG_REG_ALT_MAC], u8Data, 2);
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 1, 0)
-	if(ret < 0) {
+	if (ret < 0) {
 		mmi_err("%s: write reg: %x error!!\n", __func__, di->regs[BQ_FG_REG_ALT_MAC]);
 		return -ERROR_CODE_I2C_WRITE;
 	}
-#endif
 	mdelay(NFG1000_RESET_WAIT_TIME);
 
 	u8Data[0] = 0x3f;
-	for(retry_cnt = 0; retry_cnt < 3; retry_cnt++)
-	{
-		ret = fg_write_block(di, I2C_NO_REG_DATA, u8Data,1);
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 1, 0)
-		if(ret < 0) {
+	for (retry_cnt = 0; retry_cnt < 3; retry_cnt++) {
+		ret = fg_write_block(di, I2C_NO_REG_DATA, u8Data, 1);
+		if (ret < 0) {
 			mmi_err("%s: write reg: %x error!!\n", __func__, I2C_NO_REG_DATA);
 			return -ERROR_CODE_I2C_WRITE;
 		}
-#endif
-		ret = fg_read_block(di, I2C_NO_REG_DATA, uReCode,1);
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 1, 0)
-		if(ret < 0) {
+		ret = fg_read_block(di, I2C_NO_REG_DATA, uReCode, 1);
+		if (ret < 0) {
 			mmi_err("%s:read reg: %x error!!\n", __func__, I2C_NO_REG_DATA);
 			return -ERROR_CODE_I2C_READ;
 		}
-#endif
-		if(uReCode[0] == NFG1000_SUCESS_CODE)
+		if (uReCode[0] == NFG1000_SUCESS_CODE)
 			break;
 	}
-	if(uReCode[0] != NFG1000_SUCESS_CODE)
-	{
+	if (uReCode[0] != NFG1000_SUCESS_CODE) {
 		mdelay(NFG1000_boot_WAIT_TIME);
-		for(retry_cnt = 0; retry_cnt < 3; retry_cnt++)
-		{
+		for (retry_cnt = 0; retry_cnt < 3; retry_cnt++) {
 			ret = fg_write_block(di, I2C_NO_REG_DATA, u8Data, 1);
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 1, 0)
-			if(ret < 0) {
+			if (ret < 0) {
 				mmi_err("%s: write reg: %x error!!\n", __func__, I2C_NO_REG_DATA);
 				return -ERROR_CODE_I2C_WRITE;
 			}
-#endif
 			ret = fg_read_block(di, I2C_NO_REG_DATA, uReCode, 1);
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 1, 0)
-			if(ret < 0) {
+			if (ret < 0) {
 				mmi_err("%s:read reg: %x error!!\n", __func__, I2C_NO_REG_DATA);
 				return -ERROR_CODE_I2C_READ;
 			}
-#endif
-			if(uReCode[0] == NFG1000_SUCESS_CODE)
+			if (uReCode[0] == NFG1000_SUCESS_CODE)
 				break;
 		}
 	}
@@ -2281,12 +2268,10 @@ int fg_get_current_now(struct gauge_device *gauge_dev, int *mA)
 		*mA = 0;
 	else {
 		ret = fg_read_current(mmi, mA);
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 1, 0)
 		if (ret < 0) {
 			mmi_err("read current error, ret = %d\n", ret);
 			return ret;
 		}
-#endif
 	}
 
 	return 0;

@@ -62,8 +62,8 @@ struct cluster_info {
 };
 
 extern void list_sort(void *priv, struct list_head *head,
-		int (*cmp)(void *priv, struct list_head *a,
-			struct list_head *b));
+		int (*cmp)(void *priv, const struct list_head *a,
+			const struct list_head *b));
 
 /*
  * Nice levels are multiplicative, with a gentle 10% change for every

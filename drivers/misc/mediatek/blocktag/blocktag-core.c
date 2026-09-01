@@ -1704,7 +1704,6 @@ out:
 EXPORT_SYMBOL_GPL(mtk_btag_alloc);
 
 static void btag_trace_block_rq_insert(void *data,
-				struct request_queue *q,
 				struct request *rq)
 {
 	struct bio *bio = rq->bio;

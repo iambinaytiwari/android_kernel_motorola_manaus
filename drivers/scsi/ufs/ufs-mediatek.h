@@ -23,6 +23,11 @@ enum {
 #define ufshcd_eh_in_progress(h) \
 	((h)->eh_flags & UFSHCD_EH_IN_PROGRESS)
 
+static inline u16 ufshcd_upiu_wlun_to_scsi_wlun(u8 upiu_wlun_id)
+{
+	return (upiu_wlun_id & ~UFS_UPIU_WLUN_ID) | SCSI_W_LUN_BASE;
+}
+
 #if defined(CONFIG_SCSI_SKHID)
 #include "ufs-manual-gc.h"
 #endif
@@ -249,6 +254,7 @@ struct ufs_mtk_host {
 	struct completion luns_added;
 
 	struct semaphore rpmb_sem;
+	struct scsi_device *sdev_rpmb;
 #if defined(CONFIG_UFSFEATURE)
 	struct ufsf_feature ufsf;
 #endif

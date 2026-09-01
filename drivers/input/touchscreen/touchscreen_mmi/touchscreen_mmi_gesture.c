@@ -435,11 +435,8 @@ static int ts_mmi_touch_event_handler(struct touch_event_data *tev,  struct inpu
 
 bool ts_mmi_is_sensor_enable(void)
 {
-	struct ts_mmi_dev *touch_cdev;
-	if (sensor_pdata != NULL) {
-		touch_cdev = sensor_pdata->touch_cdev;
+	if (sensor_pdata != NULL)
 		return !!sensor_pdata->sensor_opened;
-	}
 	else
 		return false;
 }

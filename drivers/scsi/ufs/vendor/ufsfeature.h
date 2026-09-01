@@ -41,7 +41,7 @@
 
 #include <scsi/scsi_cmnd.h>
 
-#include "ufs.h"
+#include "ufshcd.h"
 
 #include "ufsshpb.h"
 #include "ufstw.h"
@@ -49,7 +49,6 @@
 #include "ufsringbuf.h"
 
 #define UFS_UPIU_MAX_GENERAL_LUN		8
-#define UFSHCD_STATE_OPERATIONAL		2	/* ufshcd.c */
 
 #define UFSFEATURE_QUERY_OPCODE			0x5500
 

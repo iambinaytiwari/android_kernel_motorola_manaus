@@ -223,9 +223,9 @@ static void probe_android_vh_ufs_send_tm_command(void *data, struct ufs_hba *hba
 	enum cmd_hist_event event;
 	struct utp_task_req_desc *d = &hba->utmrdl_base_addr[tag];
 
-	lun = (be32_to_cpu(d->req_header.dword_0) >> 8) & 0xFF;
-	task_tag = be32_to_cpu(d->req_header.dword_0) & 0xFF;
-	tm_func = (be32_to_cpu(d->req_header.dword_1) >> 16) & 0xFFFF;
+	lun = (be32_to_cpu(d->upiu_req.req_header.dword_0) >> 8) & 0xFF;
+	task_tag = be32_to_cpu(d->upiu_req.req_header.dword_0) & 0xFF;
+	tm_func = (be32_to_cpu(d->upiu_req.req_header.dword_1) >> 16) & 0xFFFF;
 
 	if (!strcmp(str, "tm_send"))
 		event = CMD_TM_SEND;
@@ -259,7 +259,7 @@ out_unlock:
 
 
 static void probe_ufshcd_command(void *data, const char *dev_name,
-				 const char *str, unsigned int tag,
+				 enum ufs_trace_str_t str_t, unsigned int tag,
 				 u32 doorbell, int transfer_len,
 				 u32 intr, u64 lba, u8 opcode, u8 group_id)
 {
@@ -274,14 +274,12 @@ static void probe_ufshcd_command(void *data, const char *dev_name,
 
 	ptr = cmd_hist_advance_ptr();
 
-	if (!strcmp(str, "send"))
+	if (str_t == UFS_CMD_SEND)
 		event = CMD_SEND;
-	else if (!strcmp(str, "complete"))
+	else if (str_t == UFS_CMD_COMP)
 		event = CMD_COMPLETED;
-	else if (!strcmp(str, "dev_complete"))
+	else if (str_t == UFS_DEV_COMP)
 		event = CMD_DEV_COMPLETED;
-	else if (!strcmp(str, "abort"))
-		event = CMD_ABORTING;
 	else
 		event = CMD_GENERIC;
 
@@ -321,7 +319,7 @@ out_unlock:
 }
 
 static void probe_ufshcd_uic_command(void *data, const char *dev_name,
-				     const char *str, u32 cmd,
+				     enum ufs_trace_str_t str_t, u32 cmd,
 				     u32 arg1, u32 arg2, u32 arg3)
 {
 	int ptr;
@@ -335,7 +333,7 @@ static void probe_ufshcd_uic_command(void *data, const char *dev_name,
 
 	ptr = cmd_hist_advance_ptr();
 
-	if (!strcmp(str, "send"))
+	if (str_t == UFS_CMD_SEND)
 		event = CMD_UIC_SEND;
 	else
 		event = CMD_UIC_CMPL_GENERAL;

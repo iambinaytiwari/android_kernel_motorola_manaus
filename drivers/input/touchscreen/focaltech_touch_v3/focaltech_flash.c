@@ -595,7 +595,7 @@ static bool fts_fwupg_check_fw_valid(void)
 static bool fts_fwupg_check_state(
     struct fts_upgrade *upg, enum FW_STATUS rstate)
 {
-    int ret = 0;
+    int ret __maybe_unused = 0;
     int i = 0;
     enum FW_STATUS cstate = FTS_RUN_IN_ERROR;
 
@@ -706,7 +706,7 @@ static bool fts_fwupg_check_flash_status(
     int retries,
     int retries_delay)
 {
-    int ret = 0;
+    int ret __maybe_unused = 0;
     int i = 0;
     u8 cmd = 0;
     u8 val[FTS_CMD_FLASH_STATUS_LEN] = { 0 };

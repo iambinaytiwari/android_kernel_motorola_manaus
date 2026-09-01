@@ -1164,7 +1164,7 @@ static int ufs_mtk_rpmb_cmd_seq(struct device *dev,
 	host = ufshcd_get_variant(hba);
 
 	spin_lock_irqsave(hba->host->host_lock, flags);
-	sdev = hba->sdev_rpmb;
+	sdev = host->sdev_rpmb;
 	if (sdev) {
 		ret = scsi_device_get(sdev);
 		if (!ret && !scsi_device_online(sdev)) {
@@ -1228,13 +1228,28 @@ static void ufs_mtk_rpmb_add(void *data, async_cookie_t cookie)
 	u8 rw_size;
 	struct ufs_mtk_host *host;
 	struct ufs_hba *hba = (struct ufs_hba *)data;
+	struct scsi_device *sdev = NULL;
 
 	host = ufshcd_get_variant(hba);
 
 	/* wait ufshcd_scsi_add_wlus add sdev_rpmb  */
 	err = wait_for_completion_timeout(&host->luns_added, 10 * HZ);
 	if (err == 0) {
-		dev_warn(hba->dev, "%s: LUNs not ready before timeout. RPMB init failed");
+		dev_warn(hba->dev, "%s: LUNs not ready before timeout. RPMB init failed\n", __func__);
+		goto out;
+	}
+
+	/* add sdev_rpmb */
+	shost_for_each_device(sdev, hba->host) {
+		if (sdev->lun == ufshcd_upiu_wlun_to_scsi_wlun(UFS_UPIU_RPMB_WLUN)) {
+			host->sdev_rpmb = sdev;
+			scsi_device_put(sdev);
+			break;
+		}
+	}
+
+	if (!host->sdev_rpmb) {
+		dev_info(hba->dev, "%s: scsi rpmb device cannot be found\n", __func__);
 		goto out;
 	}
 
@@ -1258,7 +1273,7 @@ static void ufs_mtk_rpmb_add(void *data, async_cookie_t cookie)
 
 	ufs_mtk_rpmb_dev_ops.reliable_wr_cnt = rw_size;
 
-	if (unlikely(scsi_device_get(hba->sdev_rpmb)))
+	if (unlikely(scsi_device_get(host->sdev_rpmb)))
 		goto out;
 
 	rdev = rpmb_dev_register(hba->dev, &ufs_mtk_rpmb_dev_ops);
@@ -1280,7 +1295,7 @@ static void ufs_mtk_rpmb_add(void *data, async_cookie_t cookie)
 	sema_init(&host->rpmb_sem, 1);
 
 out_put_dev:
-	scsi_device_put(hba->sdev_rpmb);
+	scsi_device_put(host->sdev_rpmb);
 
 out:
 	return;
@@ -1867,29 +1882,23 @@ static int ufs_mtk_pre_link(struct ufs_hba *hba)
 
 	ufs_mtk_get_controller_version(hba);
 
-	ret = ufs_mtk_unipro_set_lpm(hba, false);
-	if (ret)
-		return ret;
+	ufs_mtk_unipro_set_lpm(hba, false);
 
 	/*
 	 * Setting PA_Local_TX_LCC_Enable to 0 before link startup
 	 * to make sure that both host and device TX LCC are disabled
 	 * once link startup is completed.
 	 */
-	ret = ufshcd_disable_host_tx_lcc(hba);
-	if (ret)
-		return ret;
+	ufshcd_disable_host_tx_lcc(hba);
 
 	/* disable deep stall */
 	ret = ufshcd_dme_get(hba, UIC_ARG_MIB(VS_SAVEPOWERCONTROL), &tmp);
-	if (ret)
-		return ret;
+	if (!ret) {
+		tmp &= ~(1 << 6);
+		ufshcd_dme_set(hba, UIC_ARG_MIB(VS_SAVEPOWERCONTROL), tmp);
+	}
 
-	tmp &= ~(1 << 6);
-
-	ret = ufshcd_dme_set(hba, UIC_ARG_MIB(VS_SAVEPOWERCONTROL), tmp);
-
-	return ret;
+	return 0;
 }
 
 static void ufs_mtk_setup_clk_gating(struct ufs_hba *hba)
@@ -2050,7 +2059,8 @@ static void ufs_mtk_vreg_set_lpm(struct ufs_hba *hba, bool lpm)
 				   REGULATOR_MODE_NORMAL);
 }
 
-static int ufs_mtk_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+static int ufs_mtk_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op,
+			   enum ufs_notify_change_status status)
 {
 	int err;
 	struct arm_smccc_res res;
@@ -2132,7 +2142,7 @@ static void ufs_mtk_dbg_register_dump(struct ufs_hba *hba)
 	ufs_mtk_dbg_dump(100);
 }
 
-static int ufs_mtk_setup_regulators(struct ufs_hba *hba, bool on)
+static int __maybe_unused ufs_mtk_setup_regulators(struct ufs_hba *hba, bool on)
 {
 	struct ufs_mtk_host *host = ufshcd_get_variant(hba);
 	struct ufs_vreg_info *vreg_info = &hba->vreg_info;
@@ -2296,14 +2306,6 @@ static void ufs_mtk_event_notify(struct ufs_hba *hba,
 
 	trace_ufs_mtk_event(evt, val);
 
-	/*
-	 * After error handling of ufshcd_host_reset_and_restore
-	 * Bypass clear ua to send scsi command request sense, else
-	 * deadlock hang because scsi is waiting error handling done.
-	 */
-	if (evt == UFS_EVT_HOST_RESET)
-		hba->wlun_dev_clr_ua = false;
-
 #if IS_ENABLED(CONFIG_MTK_AEE_FEATURE)
 	if (evt == UFS_EVT_ABORT && !ufs_abort_aee_count) {
 		cmd_hist_disable();
@@ -2368,7 +2370,6 @@ static const struct ufs_hba_variant_ops ufs_hba_mtk_vops = {
 	.init                = ufs_mtk_init,
 	.get_ufs_hci_version = ufs_mtk_get_ufs_hci_version,
 	.setup_clocks        = ufs_mtk_setup_clocks,
-	.setup_regulators    = ufs_mtk_setup_regulators,
 	.hce_enable_notify   = ufs_mtk_hce_enable_notify,
 	.link_startup_notify = ufs_mtk_link_startup_notify,
 	.pwr_change_notify   = ufs_mtk_pwr_change_notify,

@@ -6,6 +6,11 @@
 #include "ufshcd.h"
 #include "ufshcd-crypto.h"
 #include "ufsfeature.h"
+
+static inline bool ufshcd_has_utrlcnr(struct ufs_hba *hba)
+{
+	return hba->nutrs > 32;
+}
 #include <trace/hooks/ufshcd.h>
 
 /* Query request retries */
@@ -657,7 +662,7 @@ static inline bool ufsf_valid_tag(struct ufs_hba *hba, int tag)
 static int ufsf_exec_dev_cmd(struct ufs_hba *hba,
 			     enum dev_cmd_type cmd_type, int timeout)
 {
-	struct request_queue *q = hba->cmd_queue;
+	struct request_queue *q = hba->tmf_queue;
 	struct request *req;
 	struct ufshcd_lrb *lrbp;
 	int err;
@@ -875,7 +880,7 @@ static int __ufsf_issue_tm_cmd(struct ufs_hba *hba,
 	blk_mq_start_request(req);
 
 	task_tag = req->tag;
-	treq->req_header.dword_0 |= cpu_to_be32(task_tag);
+	treq->upiu_req.req_header.dword_0 |= cpu_to_be32(task_tag);
 
 	memcpy(hba->utmrdl_base_addr + task_tag, treq, sizeof(*treq));
 	ufshcd_vops_setup_task_mgmt(hba, task_tag, tm_function);
@@ -938,16 +943,16 @@ int ufsf_issue_tm_cmd(struct ufs_hba *hba, int lun_id, int task_id,
 	treq.header.dword_2 = cpu_to_le32(OCS_INVALID_COMMAND_STATUS);
 
 	/* Configure task request UPIU */
-	treq.req_header.dword_0 = cpu_to_be32(lun_id << 8) |
+	treq.upiu_req.req_header.dword_0 = cpu_to_be32(lun_id << 8) |
 				  cpu_to_be32(UPIU_TRANSACTION_TASK_REQ << 24);
-	treq.req_header.dword_1 = cpu_to_be32(tm_function << 16);
+	treq.upiu_req.req_header.dword_1 = cpu_to_be32(tm_function << 16);
 
 	/*
 	 * The host shall provide the same value for LUN field in the basic
 	 * header and for Input Parameter.
 	 */
-	treq.input_param1 = cpu_to_be32(lun_id);
-	treq.input_param2 = cpu_to_be32(task_id);
+	treq.upiu_req.input_param1 = cpu_to_be32(lun_id);
+	treq.upiu_req.input_param2 = cpu_to_be32(task_id);
 
 	err = __ufsf_issue_tm_cmd(hba, &treq, tm_function);
 	if (err == -ETIMEDOUT)
@@ -958,7 +963,7 @@ int ufsf_issue_tm_cmd(struct ufs_hba *hba, int lun_id, int task_id,
 		dev_err(hba->dev, "%s: failed, ocs = 0x%x\n",
 				__func__, ocs_value);
 	else if (tm_response)
-		*tm_response = be32_to_cpu(treq.output_param1) &
+		*tm_response = be32_to_cpu(treq.upiu_rsp.output_param1) &
 				MASK_TM_SERVICE_RESP;
 	return err;
 }
