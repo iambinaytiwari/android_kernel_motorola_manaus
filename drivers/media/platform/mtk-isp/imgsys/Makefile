@@ -14,12 +14,8 @@ ccflags-y += -I$(srctree)/drivers/misc/mediatek/iommu
 ccflags-y += -I$(srctree)/include/soc/mediatek
 
 
-ifneq ($(wildcard $(srctree)/include/dt-bindings/memory/mt6983-larb-port.h),)
-  subdir-ccflags-y += -DWPE_TF_DUMP_71_1
-else ifneq ($(wildcard $(srctree)/include/dt-bindings/memory/mt6879-larb-port.h),)
-  subdir-ccflags-y += -DWPE_TF_DUMP_71_2
-  subdir-ccflags-y += -DONEPIXEL_MODE
-endif
+subdir-ccflags-y += -DWPE_TF_DUMP_71_2
+subdir-ccflags-y += -DONEPIXEL_MODE
 $(info "imgsys, subdir-ccflags-y = $(subdir-ccflags-y)")
 
 # Utilities to provide frame-based streaming model

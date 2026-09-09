@@ -16,11 +16,7 @@ ccflags-y += -I$(srctree)/drivers/misc/mediatek/iommu
 # with v4l2 user interfaces and alloc context managing
 # memory shared between ISP and coprocessor
 
-ifneq ($(wildcard $(srctree)/include/dt-bindings/memory/mt6983-larb-port.h),)
-	subdir-ccflags-y += -DTF_DUMP_71_1
-else ifneq ($(wildcard $(srctree)/include/dt-bindings/memory/mt6879-larb-port.h),)
-	subdir-ccflags-y += -DTF_DUMP_71_2
-endif
+subdir-ccflags-y += -DTF_DUMP_71_2
 $(info "imgsys, subdir-ccflags-y = $(subdir-ccflags-y)")
 
 mtk-ipesys-me-objs :=\
